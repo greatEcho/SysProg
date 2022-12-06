@@ -1,7 +1,5 @@
 #include <stdio.h> // printf scanf
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
+#include <stdlib.h> // malloc free exit
 #include "union.h"
 #include "func.h"
 	       	
@@ -10,27 +8,36 @@ int main(int argc, char* argv[])
 {
 	if (argc <= 1) {
 		fprintf(stderr, "%s", "\e[0;31m You should specify file name as argument!\n \e[0m");
-		return 1;
+		exit(EXIT_FAILURE);
 	}
 
 	union U u1;
 	int size = sizeof(u1);
 	unsigned char (*pencrypt)(unsigned char) = &encrypt; // pointer to function
 	unsigned char *res = malloc(size); // dynamic memory
+	if (res == NULL) {
+		fprintf(stderr, "%s", "Error allocating memory.\n");
+		exit(EXIT_FAILURE);
+	}
 
-	printf("\e[0;35m Let's Encrypt:\n \e[0m"); // Hello
+	printf("\e[0;35m Let's Encrypt:\n \e[0m"); // Hello using ANSI color codes
 
 	// User input
 	scanf("%s", u1.Area.title);
 	scanf("%f %f", &u1.Area.x, &u1.Area.y);
 
+	
+	
+	/* Test Presentation (Save plaintext) */
+	FILE *test_ptr; 
+	test_ptr = fopen("plaintext", "wb");
+	fwrite(u1.bytearr, size, sizeof(char), test_ptr);
+
+	// Encryption
+	process(u1.bytearr, res, size, pencrypt); 
+
 	// File handling
 	FILE *write_ptr;
-	/* Test Presentation */
-	write_ptr = fopen("plaintext", "wb");
-	fwrite(u1.bytearr, size, sizeof(char), write_ptr);
-	process(u1.bytearr, res, size, pencrypt);
-
 	const char* fname = argv[1];
 	write_ptr = fopen(fname, "wb");
 	if (write_ptr == NULL) {
@@ -39,28 +46,8 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// if (access(fname, W_OK) == 0) {
-	// 	write_ptr = fopen(fname, "wb");
-	// }
-	// else { // Can't access to the file
-	// 	fprintf(stderr, "%s", "\e[0;31m File doesn't exist.\n \e[0m");
-	// 	free(res);
-	// 	exit(EXIT_FAILURE);
-	// }
-
+	// Legit write file stream
 	fwrite(res, size, sizeof(char), write_ptr); // Write into file
-	if (feof(write_ptr)) {
-		fprintf(stderr, "Error reading %s: unexpected end of file\nValue of errno: %d\n", fname, errno);
-		free(res);
-		fclose(write_ptr);
-		exit(EXIT_FAILURE);
-	}
-	else if (ferror(write_ptr)) {
-		fprintf(stderr, "Error reading file\nValue of errno: %d\n", errno);
-		free(res);
-		fclose(write_ptr);
-		exit(EXIT_FAILURE);
-	}
 
 	// printf("%s\t%f\t%f\n", u1.Area.title, u1.Area.x, u1.Area.y);
 
