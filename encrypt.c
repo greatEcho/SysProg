@@ -33,11 +33,10 @@ int main(int argc, char* argv[])
 
 	const char* fname = argv[1];
 	write_ptr = fopen(fname, "wb");
-	if (pf == NULL) {
-		errnum = errno;
-		fprintf(stderr, "Value of errno: %d\n", errno);
-		perror("Error printed by perror");
-		fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
+	if (write_ptr == NULL) {
+		fprintf(stderr, "Value of errno: %d\nError opening file\n", errno);
+		free(res);
+		exit(EXIT_FAILURE);
 	}
 
 	// if (access(fname, W_OK) == 0) {
