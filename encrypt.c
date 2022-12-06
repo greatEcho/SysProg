@@ -1,5 +1,6 @@
 #include <stdio.h> // printf scanf
 #include <stdlib.h> // malloc free exit
+#include <errno.h> // errno
 #include "union.h"
 #include "func.h"
 	       	
