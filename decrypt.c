@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
 union U {
 	// Area with title and coordinates
@@ -52,29 +53,32 @@ int main(int argc, char* argv[])
 	if (access(fname, F_OK) == 0) {
 		read_ptr = fopen(fname, "rb");
 	}
-	/*
 	else {
 		fprintf(stderr, "%s", "\e[0;31m File doesn't exist.\n \e[0m");
 		exit(EXIT_FAILURE);
 	}
 
 	fread(u2.bytearr, size, sizeof(char), read_ptr);
-	if (feof(read_ptr))
-        	printf("Error reading %s: unexpected end of file\n", fname);
-	else if (ferror(read_ptr)) {
-        	perror("Error reading file\n");
+	if (feof(read_ptr)) {
+		fprintf(stderr, "Error reading %s: unexpected end of file\nValue of errno: %d\n", fname, errno);
+		fclose(read_ptr);
+		exit(EXIT_FAILURE);
 	}
-	*/
-	char c;
-	printf("Here we go\n");
+	else if (ferror(read_ptr)) {
+		fprintf(stderr, "Error reading file\nValue of errno: %d\n", errno);
+		fclose(read_ptr);
+		exit(EXIT_FAILURE);
+	}
 
 	// Reading file and Decryption
+	char c;
 	int i = 0;
-	while ( (c = fgetc(read_ptr)) != EOF) {
-//		c = encrypt(c);
+	while ( (c = fgetc(read_ptr)) != EOF ) {
+		if ( i >= 28) { 
+		fprintf(stderr, "%s", "\e[0;31m Wrong file.\n \e[0m");
+		exit(EXIT_FAILURE);
+		}
 		u2.bytearr[i] = c;
-		//printf("ok");
-	//	printf("%c ", c);
 		i++;
 	}
 	fclose(read_ptr);
@@ -84,7 +88,7 @@ int main(int argc, char* argv[])
 	// printf("%s\t%f\t%f", u2.Area.title, u2.Area.x, u2.Area.y);
 
 	process(u2.bytearr, u2.bytearr, size, pencrypt);
-	printf("%s\t%f\t%f", u2.Area.title, u2.Area.x, u2.Area.y);
+	printf("%s\t%f\t%f\n", u2.Area.title, u2.Area.x, u2.Area.y);
 
 	return 0;
 }

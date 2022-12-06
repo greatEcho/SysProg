@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 union U {
 	struct {
@@ -24,8 +25,13 @@ void process(char* x_array, char* y_array, int size, unsigned char(f)(unsigned c
 }
 	       	
 
-int main(int argc, char argv[])
+int main(int argc, char* argv[])
 {
+	if (argc <= 1) {
+		fprintf(stderr, "%s", "\e[0;31m You should specify file name as argument!\n \e[0m");
+		return 1;
+	}
+
 	union U u1;
 	int size = sizeof(u1);
 	unsigned char (*pencrypt)(unsigned char) = &encrypt; // pointer to function
@@ -44,10 +50,30 @@ int main(int argc, char argv[])
 
 
 	//FILE *write_ptr;
-	write_ptr = fopen("cipher", "wb");
-	fwrite(res, size, sizeof(char), write_ptr);
+	const char* fname = argv[1];
+	write_ptr = fopen(fname, "wb");
 
-	printf("%s\t%f\t%f", u1.Area.title, u1.Area.x, u1.Area.y);
+	if (access(fname, W_OK) == 0) {
+		write_ptr = fopen(fname, "wb");
+	}
+	else {
+		fprintf(stderr, "%s", "\e[0;31m File doesn't exist.\n \e[0m");
+		exit(EXIT_FAILURE);
+	}
+
+	fwrite(res, size, sizeof(char), write_ptr);
+	if (feof(write_ptr)) {
+		fprintf(stderr, "Error reading %s: unexpected end of file\nValue of errno: %d\n", fname, errno);
+		fclose(write_ptr);
+		exit(EXIT_FAILURE);
+	}
+	else if (ferror(write_ptr)) {
+		fprintf(stderr, "Error reading file\nValue of errno: %d\n", errno);
+		fclose(write_ptr);
+		exit(EXIT_FAILURE);
+	}
+
+	printf("%s\t%f\t%f\n", u1.Area.title, u1.Area.x, u1.Area.y);
 
 	for (int i = 0; i < size; i++) {
 		printf("%x ", u1.bytearr[i]);
