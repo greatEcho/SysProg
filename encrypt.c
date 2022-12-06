@@ -37,16 +37,21 @@ int main(int argc, char argv[])
 	scanf("%s", u1.Area.title);
 	scanf("%f %f", &u1.Area.x, &u1.Area.y);
 
+	FILE *write_ptr;
+	write_ptr = fopen("plaintext", "wb");
+	fwrite(u1.bytearr, size, sizeof(char), write_ptr);
 	process(u1.bytearr, res, size, pencrypt);
 
 
-	FILE *write_ptr;
+	//FILE *write_ptr;
 	write_ptr = fopen("cipher", "wb");
-	fwrite(res, size, 1, write_ptr);
+	fwrite(res, size, sizeof(char), write_ptr);
 
 	printf("%s\t%f\t%f", u1.Area.title, u1.Area.x, u1.Area.y);
 
-
+	for (int i = 0; i < size; i++) {
+		printf("%x ", u1.bytearr[i]);
+	}
 	free(res);
 	return 0;
 }
