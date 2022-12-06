@@ -36,6 +36,13 @@ int main(int argc, char* argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	// file exist but we can't read it
+	if (read_ptr == NULL) {
+		fprintf(stderr, "Value of errno: %d\nError opening file\n", errno);
+		free(res);
+		exit(EXIT_FAILURE);
+	}
+
 
 	// Reading the file
 	char c;
