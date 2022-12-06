@@ -32,14 +32,22 @@ int main(int argc, char* argv[])
 	process(u1.bytearr, res, size, pencrypt);
 
 	const char* fname = argv[1];
-	if (access(fname, W_OK) == 0) {
-		write_ptr = fopen(fname, "wb");
+	write_ptr = fopen(fname, "wb");
+	if (pf == NULL) {
+		errnum = errno;
+		fprintf(stderr, "Value of errno: %d\n", errno);
+		perror("Error printed by perror");
+		fprintf(stderr, "Error opening file: %s\n", strerror( errnum ));
 	}
-	else { // Can't access to the file
-		fprintf(stderr, "%s", "\e[0;31m File doesn't exist.\n \e[0m");
-		free(res);
-		exit(EXIT_FAILURE);
-	}
+
+	// if (access(fname, W_OK) == 0) {
+	// 	write_ptr = fopen(fname, "wb");
+	// }
+	// else { // Can't access to the file
+	// 	fprintf(stderr, "%s", "\e[0;31m File doesn't exist.\n \e[0m");
+	// 	free(res);
+	// 	exit(EXIT_FAILURE);
+	// }
 
 	fwrite(res, size, sizeof(char), write_ptr); // Write into file
 	if (feof(write_ptr)) {
