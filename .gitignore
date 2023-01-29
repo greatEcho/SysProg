@@ -9,3 +9,4 @@
 
 # Ingore a.out
 a.out
+*.o
