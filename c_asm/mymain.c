@@ -32,7 +32,7 @@ int main(void)
         }
         printf("\n");
     }*/
-    //square(arr, k, n);
+    square(arr, k, n);
     //printf("%ld\n", maxofthree(1, -2, 22)); 
     //printf("%d\n", addition(10));
     printf("%d\n", *arr);
@@ -52,6 +52,7 @@ void square(int** arr, int k, int n)
     for (int i=0;i<k;i++) {
         for (int j=0;j<n;j++) {
             printf("%d\n", *(*arr+i*sizeof(int*))+j);
+            printf("%d\n", arr[i][j]);
         }
     }
 }
