@@ -1,10 +1,12 @@
-	.global _start
-
-	.text
+.global _start
+.data
+number: .long 0x30
+.text
 _start:
 	mov $1, %rax	# system call 1 is write
 	mov $1, %rdi
-	mov $message, %rsi
+    addl $0x1E, number
+	mov $number, %rsi
 	mov $13, %rdx
 	syscall
 
