@@ -1,5 +1,5 @@
 section .data
-    input   DD 3
+    input   DD 7
     output  DD 5
 
 section .text
@@ -9,14 +9,14 @@ _start:
 
     mov rdx, [input] ; store value in register
 cycle:
-    mov rdx, rax
+    mov rax, rdx
     and rax, 0x01 ; find if LSB == 1
     add [output], rax ; count ones
     shr rdx, 1
-    cmp rdx, 00
-    je cycle
+    cmp rdx, 0
+    jge cycle
 cycle_end:
-    add [output], dword 10
+    ;add [output], dword 10
     mov rdi, [output]
 
 
