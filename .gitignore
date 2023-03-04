@@ -10,3 +10,7 @@
 # Ingore a.out
 a.out
 *.o
+
+CppProperties.json
+c_asm/SASM
+.vs
