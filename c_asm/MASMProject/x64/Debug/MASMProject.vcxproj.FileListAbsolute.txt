@@ -1,0 +1,2 @@
+C:\dev\MVSC\MASMProject\x64\Debug\MASMProject.exe
+C:\dev\c_code\SysProg\c_asm\MASMProject\x64\Debug\MASMProject.exe
