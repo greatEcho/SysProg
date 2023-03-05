@@ -15,3 +15,4 @@ CppProperties.json
 c_asm/SASM
 .vs
 c_asm/.vscode
+.vscode
