@@ -10,7 +10,7 @@ rows DD ?
 masm_arr proc ; start of function
 
 	mov rows, edx ; initialize rows
-	mov rsi, r8
+	mov rsi, r8 ; r8d r8w
 	mov cols, esi ; initialize cols
 	mov rax, 0 ; sum = 0
 col:
