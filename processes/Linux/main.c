@@ -104,38 +104,6 @@ int main(int argc, char* argv[])
 
     printf("-> Answer is %d <-\n", result);
 
-
-
-    //char* str = (char*) malloc(10);
-    //printf("Res: %s\n", str);
-    // for (size_t i = 0; i < NUM_CHILD; i++) {
-    //     char* str;
-    //     printf("%d\n", i);
-    //     sprintf(str, "%d", i);
-    //     //execlp("echo", "echo", "Hello, World!\n");
-    //     pid_t pid = fork(); /* create child process */
-    //     printf("pid -> %d\n", pid);
-    //     execlp("./subproc", "subproc", str, NULL); /* child process runs new program */ 
-    //     wpid = waitpid(pid, &status, WUNTRACED);
-
-    // }
-
-    // __pid_t res = fork();
-    // switch(res) {
-    //     case 0: {
-    //         execve("./subproc", NULL, NULL);
-    //     }
-    //     case -1: {
-    //         printf("Error %d\n", errno);
-    //         return 1;
-    //     }
-    //     default:
-    //         __pid_t res = fork();
-    //         execve("./subproc", NULL, NULL);
-    //         return 0;
-    // }
-    
-
     return 0;
 }
 
@@ -144,7 +112,7 @@ void read_input_file(FILE** fp, char** buffer, long *file_size)
     FILE* input_file = *fp;
     input_file = fopen(INPUT_FILE, "r");
     if (!input_file) {
-        perror("File openin failed");
+        perror("File opening failed");
         exit(EXIT_FAILURE);
     }
     // get the file size

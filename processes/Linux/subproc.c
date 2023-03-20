@@ -34,7 +34,7 @@ size_t read_chunk_file(char* filename)
     int c;
     // count how many ascii 0x00-0x1F in chunk file
     while ((c = fgetc(chunk_file)) != EOF) {
-        if (c >= 0 && c <= 0x1F) {
+        if ((c >= 0 && c <= 0x1F) || (c == 0x7F)) {
             ++counter;
         }
     }
