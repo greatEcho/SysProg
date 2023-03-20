@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     }
 
     // open input file
-    int input_fd = open(argv[1], O_WRONLY);
+    int input_fd = open(argv[1], O_RDONLY);
     if (input_fd < 0) {
         // perror("Error: ");
         char* errMsg = strerror(errno);
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     // if memory were not allocated
     if (!buffer) {
         char* errMsg = strerror(errno);
-        write(STDERR_FILENO, "Error: ", 8); // 17 - msg length
+        write(STDERR_FILENO, "Error: ", 8); // 8 - msg length
         write(STDERR_FILENO, errMsg, strlen(errMsg));
         close(input_fd); // free fd
         close(output_fd);
@@ -54,9 +54,20 @@ int main(int argc, char* argv[])
     int file_length = 0; 
     // read a file
     while ( (bytes_read = read(input_fd, buffer, BUFFER_SIZE)) ) {
+        if (bytes_read < 0) {
+            char* errMsg = strerror(errno);
+            write(STDERR_FILENO, "Error: ", 8);
+            write(STDERR_FILENO, errMsg, strlen(errMsg));
+            close(input_fd);
+            close(output_fd);
+            free(buffer);
+            buffer = NULL;
+            return EXIT_FAILURE; 
+        }
         file_length += bytes_read;
         //write(STDOUT_FILENO, buffer, bytes_read); // print data
     }
+    
 
     // convert int to str
     char str[33]; // up to 1 Gb
@@ -68,16 +79,17 @@ int main(int argc, char* argv[])
 //        perror("write");    
         if (bytes_written < 0) {
             char* errMsg = strerror(errno);
-            write(STDERR_FILENO, "Error: ", 8); // 17 - msg length
+            write(STDERR_FILENO, "Error: ", 8); // 8 - msg length
             write(STDERR_FILENO, errMsg, strlen(errMsg));
         }
-        else {
+        else { // if we can't write all data we have
             char* msg = "Error: Can't write data in the file.\n";
             write(STDERR_FILENO, msg, sizeof(msg));
         }
         close(input_fd);
         close(output_fd);
         free(buffer);
+        buffer = NULL;
         return EXIT_FAILURE;
     }  
     
