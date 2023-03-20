@@ -3,17 +3,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define INPUT_FILE "2000.txt"
-#define OUTPUT_FILE "output"
-#define BUFFER_SIZE 22
+#pragma comment(lib, "user32.lib") /* for AnsitoOem */
 
-void win_print(LPCSTR message);
-void error_handle(HANDLE handle,LPCSTR init_msg, void* ptr, HANDLE opened_files[], size_t num_files);
-void cleanup(void* ptr, HANDLE opened_files[], size_t num_files);
+#define BUFFER_SIZE 10
 
-int wmain(void)
+void win_print(LPSTR message);
+void error_handle(HANDLE handle,LPSTR init_msg, void* ptr, HANDLE opened_files[], size_t num_files);
+void cleanup(void** pptr, HANDLE opened_files[], size_t num_files);
+
+int main(int argc, char* argv[])
 {
-    // TO DO: ARGV ARGC
+    // check if args are passed
+    if (argc != 3) {
+        char* msg = (char*) malloc(32);
+        sprintf(msg, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        win_print((LPSTR)msg);
+        return EXIT_FAILURE;
+    }
+
     // set locale based on user's env for all categories
     setlocale(0, "");
     HANDLE input_fh, output_fh;
@@ -27,9 +34,8 @@ int wmain(void)
         printf("Error: Can't allocate memory.\n");
         return EXIT_FAILURE;
     }
-
     // open the input file
-    input_fh = CreateFile(INPUT_FILE, /*file name*/
+    input_fh = CreateFile(argv[1], /*file name*/
                           GENERIC_READ, /*desired access to the file*/
                           0, /*share mode (disabled)*/
                           NULL, /*handle can't be inherited by child process*/
@@ -46,17 +52,16 @@ int wmain(void)
     // count the input file size
     do {
         if (!ReadFile(input_fh, buffer, BUFFER_SIZE, &bytes_read, NULL)) {
+            win_print("Error reading from file\n");
             printf("Error reading from file\n");
-            CloseHandle(input_fh);
-            free(buffer);
-            buffer = NULL;
+            cleanup(&buffer, opened_files, 1);
             return EXIT_FAILURE;
         }
         file_size += bytes_read;
     } while (bytes_read);
 
     // open the output file
-    output_fh = CreateFile(OUTPUT_FILE,
+    output_fh = CreateFile(argv[2],
                            GENERIC_WRITE,
                            0, 
                            NULL, 
@@ -65,7 +70,6 @@ int wmain(void)
                            NULL
                            );
     // handle errors
-   // HANDLE opened_files[] = {input_fh};
     error_handle(output_fh, "Error opening output file: ", buffer, opened_files, 1);
     opened_files[1] = output_fh;
 
@@ -81,31 +85,32 @@ int wmain(void)
                    &bytes_written, 
                    NULL) //LAST NULL - not overlapped (async)
                    || bytes_written != len) { 
-        printf("Error writing to the file\n");
-        //opened_files = {input_fh, output_fh};
-        //cleanup(buffer, {input_fh, output_fh}, 2);
+        error_handle(INVALID_HANDLE_VALUE, "Error writing to the file", buffer, opened_files, 2);
         return EXIT_FAILURE;
     }
-    printf("%d\n", file_size);
-    win_print((LPCSTR) str);
 
-    cleanup(buffer, opened_files, 2);
+    // print result
+    printf("%d\n", file_size);
+    win_print((LPSTR) str);
+    cleanup(&buffer, opened_files, 2);
 
     return EXIT_SUCCESS;
 }
 
-void win_print(LPCSTR message)
+void win_print(LPSTR message)
 {
-    DWORD dw_bytes_written = 0;
-    HANDLE console_h = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD dw_bytes_written = 0; /* unsigned 32-bit integer */
+    HANDLE console_h = GetStdHandle(STD_OUTPUT_HANDLE); /* get a pointer to Console */ /* STD_ERROR_HANDLE*/
     if (console_h == INVALID_HANDLE_VALUE)
         exit(EXIT_FAILURE);
-    
-    if (!WriteConsole(console_h, message, strlen(message), &dw_bytes_written, NULL))
+    char msg[256];
+    lstrcpy(msg, message);
+    AnsiToOem(msg, msg); 
+    if (!WriteConsole(console_h, (LPCSTR) msg, strlen(message), &dw_bytes_written, NULL))
         exit(EXIT_FAILURE);
 }
 
-void error_handle(HANDLE handle,LPCSTR init_msg, void* ptr, HANDLE opened_files[], size_t num_files)
+void error_handle(HANDLE handle,LPSTR init_msg, void* ptr, HANDLE opened_files[], size_t num_files)
 {
     if (handle == INVALID_HANDLE_VALUE) {
         LPSTR err_msg;
@@ -118,23 +123,24 @@ void error_handle(HANDLE handle,LPCSTR init_msg, void* ptr, HANDLE opened_files[
                       NULL
                       );
         win_print(init_msg);
-        printf("%s\n", err_msg);
+        win_print(err_msg);
+        //printf("%s\n", err_msg);
         //printf("Error opening input file: %s\n", err_msg);
         LocalFree(err_msg);
-        cleanup(ptr, opened_files, num_files);
+        cleanup(&ptr, opened_files, num_files);
         exit(EXIT_FAILURE);
     }
 }
 
-void cleanup(void* ptr, HANDLE opened_files[], size_t num_files)
+void cleanup(void** pptr, HANDLE opened_files[], size_t num_files)
 {
-    if (ptr != NULL) {
+    if (*pptr != NULL) {
         //free(ptr);
-        if (!HeapFree(GetProcessHeap(), 0, ptr)) {
+        if (!HeapFree(GetProcessHeap(), 0, pptr)) {
             printf("Can't free memory\n");
             exit(EXIT_FAILURE);
         }
-        ptr = NULL;
+        pptr = NULL;
     }
     for (size_t i = 0; i < num_files; i++) {
         if (opened_files[i] != NULL) {
