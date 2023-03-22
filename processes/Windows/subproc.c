@@ -42,13 +42,13 @@ size_t read_chunk_file(char* filename)
         }
     }
     if (ferror(chunk_file)) {
-        printf("I/O error when reading\n");
+        fprintf(stderr, "I/O error when reading\n");
         fclose(chunk_file);
         chunk_file = NULL;
         exit(EXIT_FAILURE);
     }
     else if (feof(chunk_file)) {
-        printf("End of file is reached successfully\n");
+        //printf("End of file is reached successfully\n");
     }
 
     fclose(chunk_file);
