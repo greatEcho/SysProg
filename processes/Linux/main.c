@@ -39,15 +39,21 @@ int main(int argc, char* argv[])
         sprintf(chunk_filename, "chunk%d", i);
         // create child process copy
         child_pid = fork();
-        if (child_pid == 0) {
+        switch(child_pid) {
+        case -1:
+            perror("Fork failed");
+            exit(EXIT_FAILURE);
+        case 0:
             // Child process 
-            printf("Child process executing...\n");
-            printf("pid -> %d\n", getpid());
-            execl("./subproc", "subproc", chunk_filename, NULL);
+            printf("Now we start child process..\n");
+            if ( execl("./subproc", "subproc", chunk_filename, NULL) == -1 ) {
+                perror("Starting child process failed.");
+                exit(EXIT_FAILURE);
+            }
             // these code will be never reached
             printf("Child process finished.\n");
             exit(0);
-        } else if (child_pid > 0) {
+        default:
             // Parent process
             printf("Parent process waiting for children...\n");
             do {
@@ -56,14 +62,10 @@ int main(int argc, char* argv[])
                     perror("Waitpid Error");
                     exit(1);
                 }
+                if (WEXITSTATUS(status)) { perror("Child failed"); exit(EXIT_FAILURE); }
             } while (!WIFEXITED(status) && !WIFSIGNALED(status));
             printf("Parent process continuing...\n");
-        } else {
-            // Fork failed
-            perror("Fork failed");
-            //printf("Fork failed.\n");
-            exit(1);
-        }    
+        }
 
     }
     printf("parent pid -> %d\n", getpid());
@@ -105,7 +107,8 @@ int main(int argc, char* argv[])
     printf("-> Answer is %d <-\n", result);
 
     return 0;
-}
+} // end of the program
+
 
 void read_input_file(FILE** fp, char** buffer, long *file_size)
 {
