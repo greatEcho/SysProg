@@ -45,7 +45,7 @@ size_t read_chunk_file(char* filename)
         exit(EXIT_FAILURE);
     }
     else if (feof(chunk_file)) {
-        printf("End of file is reached successfully\n");
+        //printf("End of file is reached successfully\n");
     }
 
     fclose(chunk_file);
@@ -56,14 +56,22 @@ size_t read_chunk_file(char* filename)
 void write_result(size_t result, char* filename)
 {
     char* result_filename = malloc(FILENAME_SIZE);
+    if (!result_filename) {
+        fprintf(stderr, "Error: can't allocate memory\n");
+        exit(EXIT_FAILURE);
+    }
     sprintf(result_filename, "%s_result", filename);
     FILE* output_file = fopen(result_filename, "w");
     if (!output_file) {
         perror("File opening failed");
+        free(result_filename);
+        result_filename = NULL;
         exit(EXIT_FAILURE);
     }
-    fprintf(output_file, "%d", result);
+    fprintf(output_file, "%ld", result);
     // free allocated memory
     fclose(output_file);
     output_file = NULL;
+    free(result_filename);
+    result_filename = NULL;
 }

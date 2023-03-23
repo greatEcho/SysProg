@@ -21,18 +21,19 @@ int main(int argc, char* argv[])
     // check if third argument is valid
     char* endptr;
     size_t num_child = strtol(argv[2], &endptr, 10);
-        if (*endptr != '\0' || num_child > INT32_MAX || num_child < ARG_MIN) {
-            fprintf( stderr, "Error! Invalid input: %s", argv[2]);
-            return EXIT_FAILURE;
-        }
+    if (*endptr != '\0' || num_child > INT32_MAX || num_child < ARG_MIN) {
+        fprintf( stderr, "Error! Invalid input: %s", argv[2]);
+        return EXIT_FAILURE;
+    }
     // open and read the input file
     FILE* input_file;
     char* buffer;
     long file_size;
     read_input_file(&input_file, &buffer, &file_size, argv[1]);
     if (file_size < num_child) {
-        fprintf( stderr, "Error! The number of child processes is too high.\n");
-        return EXIT_FAILURE;
+        num_child = file_size / 2;
+        fprintf( stderr, "Warning: The number of child processes is too high. "
+                         "The altered value will be %ld.\n", num_child);
     }
 
     // create file chunks
@@ -175,17 +176,12 @@ void create_file_chunks(char* buffer, long file_size, const size_t num_child)
             exit(EXIT_FAILURE);
         }
         char* chunk_buf = (char*) malloc(chunk_size);
-        // if (i == 0)
-        //     shift = buffer;
-        // else
-        //     shift = buffer + chunk_size;
         memcpy(chunk_buf, shift, chunk_size);
         for (size_t j = 0; j < chunk_size; j++) {
             printf("%02X", chunk_buf[j]);
         }
         printf("\n");
         shift += chunk_size;
-        //chunk_buf[chunk_size] = '\0';
         fwrite(chunk_buf, 1, chunk_size, output_file); /* write chunk of buffer in new file */
         // free allocated memory
         fclose(output_file);
