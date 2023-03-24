@@ -11,7 +11,6 @@
 
 #define ARGC 3
 #define ARG_MIN 1
-#define FILENAME_SIZE 32
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 size_t globalVar = 5;
