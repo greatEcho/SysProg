@@ -7,8 +7,8 @@
 #include <sys/types.h>
 #include <inttypes.h>
 
-#define ARG_MIN 1
 #define ARGC 3
+#define ARG_MIN 1
 #define FILENAME_SIZE 32
 
 void read_input_file(FILE** fp, char** buffer, size_t* file_size, const char* filename);
@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     create_file_chunks(buffer, file_size, num_child);
 
 
-    // creat child processes
+    // create child processes
     char chunk_filename[FILENAME_SIZE];
     pid_t child_pid, wpid;
     int status;
