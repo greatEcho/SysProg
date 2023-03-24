@@ -12,6 +12,7 @@ void create_file_chunks(char* buffer, long file_size, const size_t num_child);
 
 int main(int argc, char* argv[])
 {
+    setlocale(0, "");
     //system("del chunk*");
    // check if args are passed and valid
     if (argc != ARGC) {
@@ -30,6 +31,11 @@ int main(int argc, char* argv[])
     char* buffer;
     long file_size;
     read_input_file(&input_file, &buffer, &file_size, argv[1]);
+    if (file_size <= 1) {
+        fprintf(stderr, "Error: File size is too small.\n");
+        fclose(input_file);
+        return EXIT_FAILURE;
+    }
     if (file_size < num_child) {
         num_child = file_size / 2;
         fprintf( stderr, "Warning: The number of child processes is too high. "
@@ -40,24 +46,47 @@ int main(int argc, char* argv[])
     create_file_chunks(buffer, file_size, num_child);
 
     // create child processes
-
     char* subproc = (char*) malloc(FILENAME_SIZE);
-    for (size_t i = 0; i < num_child; i++) {
-        /* .hProcess - process descriptor 
-        * .hTread - main thread descriptor
-        * .dwProcessId - child pid
-        * .dwThreadId - main thread id
-        */
-        PROCESS_INFORMATION pi;
-        /* 
-        *  
-        */
-        STARTUPINFO si;
+    if (!subproc) {
+        perror("Can't allocate memory");
+        exit(EXIT_FAILURE);
+    }
+    /* .hProcess - process descriptor 
+    * .hTread - main thread descriptor
+    * .dwProcessId - child pid
+    * .dwThreadId - main thread id
+    */
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION*) malloc(sizeof(PROCESS_INFORMATION) * num_child);
+    if (!pi) {
+        perror("Can't allocate memory");
+        free(subproc);
+        subproc = NULL;
+        exit(EXIT_FAILURE);
+    }
 
-        // initialize with zeros
-        //ZeroMemory(&si, sizeof(si));
-        ZeroMemory(&pi, sizeof(pi));
-        GetStartupInfo(&si);
+    /* STARTUPINFO - startup information for created process 
+    *  stdinput, stdoutput, stderr, desktop handle, etc for the process
+    */
+    STARTUPINFO *si = (STARTUPINFO*) malloc(sizeof(STARTUPINFO) * num_child);
+    if (!si) {
+        perror("Can't allocate memory");
+        free(subproc);
+        free(pi);
+        subproc = NULL;
+        pi = NULL;
+        exit(EXIT_FAILURE);
+    }
+    // only handles for wait function
+    HANDLE* handles_pi = (HANDLE*) malloc(sizeof(HANDLE) * num_child);
+
+
+    // initialize with zeros
+    ZeroMemory(si, sizeof(STARTUPINFO) * num_child);
+    ZeroMemory(pi, sizeof(PROCESS_INFORMATION) * num_child);
+    for (size_t i = 0; i < num_child; i++) {
+
+
+        // GetStartupInfo(&si[i]);
         sprintf(subproc, "./subproc chunk%d", i);
         if (!CreateProcess(NULL,            // No module name (use command line)
                         subproc,      // Command line
@@ -67,31 +96,64 @@ int main(int argc, char* argv[])
                         0,               // No creation flags
                         NULL,            // Use parent's environment block
                         NULL,            // Use parent's starting directory
-                        &si,             // Pointer to STARTUPINFO structure
-                        &pi)             // Pointer to PROCESS_INFORMATION structure
+                        &si[i],             // Pointer to STARTUPINFO structure
+                        &pi[i])             // Pointer to PROCESS_INFORMATION structure
             ) /* if function returns false then error occured */
         {
-                printf("Error %d: Can't launch child process\n", GetLastError());
+                fprintf(stderr, "Error %d: Can't launch child process\n", GetLastError());
                 exit(EXIT_FAILURE);
         }
+        handles_pi[i] = pi[i].hProcess;
 
         // print child_pid
-        printf("New process created with process ID %d\n", pi.dwProcessId);
+        printf("New process created with process ID %d\n", pi[i].dwProcessId);
 
         // Wait until child process exits
-        if (WaitForSingleObject(pi.hProcess, INFINITE) != WAIT_OBJECT_0) {
-            printf("Error occured during child process (%d)\n", GetLastError());
-            exit(EXIT_FAILURE);
-        }
-
-        // Close process and thread handles
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
+        // if (WaitForSingleObject(pi.hProcess, INFINITE) != WAIT_OBJECT_0) {
+        //     printf("Error occured during child process (%d)\n", GetLastError());
+        //     exit(EXIT_FAILURE);
+        // }
+        // CloseHandle(pi[i].hProcess);
+        // CloseHandle(pi[i].hThread);
     }
 
+    // Wait until child processes exit
+    DWORD child_sig = WaitForMultipleObjects((DWORD) num_child, handles_pi, TRUE, INFINITE);
+    if (child_sig == WAIT_FAILED) {
+        fprintf(stderr, "Error occured during child process (%d)\n", GetLastError());
+        DWORD errorCode = GetLastError();
+        // Get the error message
+        LPSTR errorMessage = NULL;
+        DWORD result = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                                      NULL,
+                                      errorCode,
+                                      0,
+                                      (LPSTR)&errorMessage,
+                                      0,
+                                      NULL);
+        if (result != 0)
+        {
+            printf("Error code: %d\n", errorCode);
+            printf("Error message: %s\n", errorMessage);
+            LocalFree(errorMessage);
+        }
+        exit(EXIT_FAILURE);
+    }
+    // Close process and thread handles
+    for (int i = 0; i < num_child; i++) {
+        CloseHandle(pi[i].hProcess);
+        CloseHandle(pi[i].hThread);
+    }
+
+    printf("Parent process continuing..\n");
     free(subproc);
     subproc = NULL;
-
+    free(pi);
+    pi = NULL;
+    free(si);
+    si = NULL;
+    free(handles_pi);
+    handles_pi = NULL;
 
   // read results from children
     char chunk_filename[FILENAME_SIZE];
