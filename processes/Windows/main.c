@@ -137,6 +137,14 @@ int main(int argc, char* argv[])
             printf("Error message: %s\n", errorMessage);
             LocalFree(errorMessage);
         }
+        free(subproc);
+        subproc = NULL;
+        free(pi);
+        pi = NULL;
+        free(si);
+        si = NULL;
+        free(handles_pi);
+        handles_pi = NULL;
         exit(EXIT_FAILURE);
     }
     // Close process and thread handles
