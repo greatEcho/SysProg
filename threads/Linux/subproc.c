@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "Subproc_arg.h"
+#include "global.h"
 
 #define ARGC 2
 #define FILENAME_SIZE 32
@@ -26,14 +27,15 @@ void* subproc(void* arg)
         // }
         // printf("\n");
     pthread_mutex_lock(&mutex);
-    size_t result = count_symbols(str, str_size);
+    size_t chunk_result = count_symbols(str, str_size);
     free(str);
     str = NULL;
+    result += chunk_result;
     pthread_mutex_unlock(&mutex);
     /* return value from thread function */
-    size_t* presult = (size_t*) malloc(sizeof(size_t));
-    *presult = result;
-    pthread_exit((void*) presult);
+    // size_t* presult = (size_t*) malloc(sizeof(size_t));
+    // *presult = result;
+    pthread_exit(0);
 }
 
 size_t count_symbols(char* str, const size_t str_size)

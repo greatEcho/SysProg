@@ -8,12 +8,13 @@
 #include <inttypes.h>
 #include <pthread.h>
 #include "Subproc_arg.h"
+#include "global.h"
 
 #define ARGC 3
 #define ARG_MIN 1
 
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-size_t globalVar = 5;
+size_t result = 0;
 
 void read_input_file(FILE** fp, char** buffer, size_t* file_size, const char* filename);
 void* subproc(void* arg);
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
     }
 
     /* create and run threads */
-    size_t result = run_threads(buffer, num_threads, file_size);
+    run_threads(buffer, num_threads, file_size);
 
     printf("-> Answer is %ld <-\n", result);
 
@@ -88,7 +89,7 @@ void read_input_file(FILE** fp, char** buffer, size_t *file_size, const char* fi
 
 size_t run_threads(char* buffer, const size_t num_threads, const size_t file_size)
 {
-    size_t result = 0, chunk_size;
+    size_t chunk_result = 0, chunk_size;
     char* shift = buffer;
     pthread_t* threads = (pthread_t*) malloc(sizeof(pthread_t) * num_threads);
     Subproc_arg* t_args = (Subproc_arg*) malloc(sizeof(Subproc_arg) * num_threads);
@@ -117,10 +118,11 @@ size_t run_threads(char* buffer, const size_t num_threads, const size_t file_siz
 
     // Wait all threads
     for (size_t i = 0; i < num_threads; i++) {
-        pthread_join(threads[i], &(t_results[i]));
+        pthread_join(threads[i], NULL);
+        // pthread_join(threads[i], &(t_results[i]));
         // printf("result: %ld\n", *((size_t*) t_results[i]));
         // get results from threads
-        result += *((size_t*) t_results[i]);
+        // result += *((size_t*) t_results[i]);
     }
 
     printf("All threads are completed\n");
@@ -134,22 +136,5 @@ size_t run_threads(char* buffer, const size_t num_threads, const size_t file_siz
     free(t_results);
     t_results = NULL;
 
-
     return result;
-
-
-
-}
-
-void *f(void* arg)
-{
-    size_t* t = (size_t*) arg;
-    printf("arg: %ld\n", *t);
-    pthread_mutex_lock(&mutex);
-    printf("%ld\n", globalVar);
-    globalVar = (globalVar * 2) + (globalVar % 3);
-    printf("%ld\n", globalVar);
-    pthread_mutex_unlock(&mutex);
-    /* return value from thread function */
-    pthread_exit((void*) t);
 }
