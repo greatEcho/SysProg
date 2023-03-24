@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+import platform
 
 # const
 ARGC = 3
@@ -62,7 +63,11 @@ def main():
         try:
             cwd = os.getcwd()
             subproc = os.path.join(cwd, "subproc.py")
-            child = subprocess.Popen(["python", subproc, f"chunk{i}"], shell=True)
+            if platform.system() == 'Linux':
+                child = subprocess.Popen(["python", subproc, f"chunk{i}"])
+            else:
+                child = subprocess.Popen(["python", subproc, f"chunk{i}"], shell=True) # using shell=True isn't safe
+
         except OSError as e:
             print(f"Error {e.errno}: Can't launch child process", file=sys.stderr)
             sys.exit(1)
